@@ -1,0 +1,44 @@
+#include <iostream>
+#include <vector>
+#include <random>
+#include <algorithm>
+
+struct Example {
+    std::vector<double> features;
+    int label;
+};
+
+struct EDRModel {
+    // The model parameters are the weights of each feature.
+    std::vector<double> weights;
+
+    EDRModel(int num_features) {
+        // Initialize the model with random weights.
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(0.0, 1.0);
+        for (int i = 0; i < num_features; ++i) {
+            weights.push_back(dis(gen));
+        }
+    }
+
+    void train(const std::vector<Example>& examples, int num_epochs, double learning_rate) {
+        // Train the model using stochastic gradient descent.
+        for (int epoch = 0; epoch < num_epochs; ++epoch) {
+            // Shuffle the examples to improve convergence.
+            std::vector<Example> shuffled_examples = examples;
+            std::random_shuffle(shuffled_examples.begin(), shuffled_examples.end());
+
+            // Compute the gradient for each example in the batch and update the weights.
+            for (const Example& example : shuffled_examples) {
+                int prediction = predict(example.features);
+                int error = example.label - prediction;
+                std::vector<double> gradient;
+                for (int i = 0; i < example.features.size(); ++i) {
+                    gradient.push_back(example.features[i] * error * learning_rate);
+                }
+                for (int i = 0; i < weights.size(); ++i) {
+                    weights[i] += gradient[i];
+                }
+            }
+        }
